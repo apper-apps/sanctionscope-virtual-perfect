@@ -1,18 +1,27 @@
 const API_BASE_URL = "https://api.dilisense.com/v1";
 const API_KEY = "gV9wIVW2LAemLdktlhzm6Y6I1Z6Lptnkga6TnC30";
+const REQUEST_TIMEOUT = 10000; // 10 seconds
 
 class SanctionsService {
   async checkApiConnection() {
     const startTime = Date.now();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
     try {
       const response = await fetch(`${API_BASE_URL}/health`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${API_KEY}`,
           "Content-Type": "application/json",
+          "Accept": "application/json",
         },
+        mode: "cors",
+        credentials: "omit",
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
       const responseTime = Date.now() - startTime;
       
       if (response.ok) {
@@ -23,32 +32,53 @@ class SanctionsService {
           errorMessage: null
         };
       } else {
+        const errorText = await response.text().catch(() => response.statusText);
         return {
           isConnected: false,
           lastChecked: new Date().toISOString(),
           responseTime,
-          errorMessage: `API returned ${response.status}: ${response.statusText}`
+          errorMessage: `API returned ${response.status}: ${errorText || response.statusText}`
         };
       }
     } catch (error) {
+      clearTimeout(timeoutId);
       const responseTime = Date.now() - startTime;
+      let errorMessage = "Connection failed";
+      
+      if (error.name === 'AbortError') {
+        errorMessage = "Request timeout - API not responding";
+      } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+        errorMessage = "Network error - Check internet connection";
+      } else if (error.message.includes('CORS')) {
+        errorMessage = "CORS error - API access blocked";
+      } else {
+        errorMessage = error.message || "Unknown connection error";
+      }
+
       return {
         isConnected: false,
         lastChecked: new Date().toISOString(),
         responseTime,
-        errorMessage: error.message || "Connection failed"
+        errorMessage
       };
     }
   }
 
-  async searchEntities(query) {
+async searchEntities(query) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
     try {
       const response = await fetch(`${API_BASE_URL}/search`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${API_KEY}`,
           "Content-Type": "application/json",
+          "Accept": "application/json",
         },
+        mode: "cors",
+        credentials: "omit",
+        signal: controller.signal,
         body: JSON.stringify({
           query: query,
           limit: 50,
@@ -56,11 +86,19 @@ class SanctionsService {
         }),
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error(`Search failed: ${response.status} ${response.statusText}`);
+        const errorText = await response.text().catch(() => response.statusText);
+        throw new Error(`Search failed: ${response.status} ${errorText || response.statusText}`);
       }
 
       const data = await response.json();
+      
+      // Validate response structure
+      if (!data || typeof data !== 'object') {
+        throw new Error("Invalid response format from API");
+      }
       
       // Transform API response to our expected format
       return data.results?.map((item, index) => ({
@@ -72,26 +110,49 @@ class SanctionsService {
         country: item.country || item.nationality || null
       })) || [];
     } catch (error) {
+      clearTimeout(timeoutId);
       console.error("Search error:", error);
-      throw new Error(error.message || "Failed to search entities");
+      
+      if (error.name === 'AbortError') {
+        throw new Error("Search timeout - API not responding");
+      } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+        throw new Error("Network error - Check internet connection");
+      } else {
+        throw new Error(error.message || "Failed to search entities");
+      }
     }
   }
 
-  async getEntityDetails(entityId) {
+async getEntityDetails(entityId) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
     try {
       const response = await fetch(`${API_BASE_URL}/entity/${entityId}`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${API_KEY}`,
           "Content-Type": "application/json",
+          "Accept": "application/json",
         },
+        mode: "cors",
+        credentials: "omit",
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error(`Failed to fetch entity details: ${response.status} ${response.statusText}`);
+        const errorText = await response.text().catch(() => response.statusText);
+        throw new Error(`Failed to fetch entity details: ${response.status} ${errorText || response.statusText}`);
       }
 
       const data = await response.json();
+      
+      // Validate response structure
+      if (!data || typeof data !== 'object') {
+        throw new Error("Invalid response format from API");
+      }
       
       // Transform API response to our expected format
       return {
@@ -108,8 +169,16 @@ class SanctionsService {
         lastUpdated: data.last_updated || data.updated_at || new Date().toISOString()
       };
     } catch (error) {
+      clearTimeout(timeoutId);
       console.error("Entity details error:", error);
-      throw new Error(error.message || "Failed to fetch entity details");
+      
+      if (error.name === 'AbortError') {
+        throw new Error("Request timeout - API not responding");
+      } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+        throw new Error("Network error - Check internet connection");
+      } else {
+        throw new Error(error.message || "Failed to fetch entity details");
+      }
     }
   }
 

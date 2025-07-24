@@ -1,10 +1,9 @@
 // Get API configuration from environment variables
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.dilisense.com/v1";
-const API_KEY = import.meta.env.VITE_API_KEY || "gV9wIVW2LAemLdktlhzm6Y6I1Z6Lptnkga6TnC30";
+const X_API_KEY = import.meta.env.VITE_API_KEY || "gV9wIVW2LAemLdktlhzm6Y6I1Z6Lptnkga6TnC30";
 const REQUEST_TIMEOUT = 10000; // 10 seconds
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
-
 // Enhanced error handling utility
 const createApiError = (message, status, endpoint, originalError = null) => {
   const error = new Error(message);
@@ -57,7 +56,7 @@ const response = await fetch(url, {
       ...options,
       signal: controller.signal,
       headers: {
-        "x-api-key": API_KEY,
+        "x-api-key": X_API_KEY,
         "Content-Type": "application/json",
         "Accept": "application/json",
         ...options.headers,

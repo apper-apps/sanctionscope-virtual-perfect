@@ -1,5 +1,5 @@
 // Get API configuration from environment variables
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.sanctions-check.com/v1";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.dilisense.com/v1";
 const API_KEY = import.meta.env.VITE_API_KEY || "gV9wIVW2LAemLdktlhzm6Y6I1Z6Lptnkga6TnC30";
 const REQUEST_TIMEOUT = 10000; // 10 seconds
 const MAX_RETRIES = 3;

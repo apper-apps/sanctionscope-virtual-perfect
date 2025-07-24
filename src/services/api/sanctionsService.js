@@ -190,14 +190,16 @@ async searchEntities(query) {
     const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
     try {
+      // Convert to GET request with query parameters
+      const searchParams = new URLSearchParams({
+        query: query,
+        limit: 50,
+        offset: 0
+      });
+      
       const data = await retryRequest(() => 
-        apiRequest('/search', {
-          method: 'POST',
-          body: JSON.stringify({
-            query: query,
-            limit: 50,
-            offset: 0
-          })
+        apiRequest(`/search?${searchParams.toString()}`, {
+          method: 'GET'
         })
       );
 

@@ -53,11 +53,11 @@ const apiRequest = async (endpoint, options = {}) => {
     const url = `${API_BASE_URL}${endpoint}`;
     console.log(`API Request: ${options.method || 'GET'} ${url}`);
     
-    const response = await fetch(url, {
+const response = await fetch(url, {
       ...options,
       signal: controller.signal,
       headers: {
-        "Authorization": `Bearer ${API_KEY}`,
+        "x-api-key": API_KEY,
         "Content-Type": "application/json",
         "Accept": "application/json",
         ...options.headers,

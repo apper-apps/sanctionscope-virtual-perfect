@@ -41,14 +41,20 @@ const AppLoader = ({ status, onContinue }) => {
                 </>
               )}
             </div>
-            
-            {status.errorMessage && (
-              <div className="flex items-center gap-2 p-3 bg-danger-50 rounded-lg text-danger-700 text-sm">
-                <ApperIcon name="AlertTriangle" className="w-4 h-4" />
-                {status.errorMessage}
+{status.errorMessage && (
+              <div className="flex items-start gap-3 p-4 bg-danger-50 rounded-xl border border-danger-100 text-danger-700">
+                <ApperIcon name="AlertCircle" className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                <div className="space-y-1">
+                  <p className="font-medium text-sm">Connection Issue</p>
+                  <p className="text-sm leading-relaxed">{status.errorMessage}</p>
+                  <p className="text-xs text-danger-600 mt-2">
+                    • Check your internet connection<br/>
+                    • Verify firewall settings<br/>
+                    • Try refreshing the page
+                  </p>
+                </div>
               </div>
             )}
-            
             {status.responseTime && (
               <p className="text-sm text-gray-500">Response time: {status.responseTime}ms</p>
             )}

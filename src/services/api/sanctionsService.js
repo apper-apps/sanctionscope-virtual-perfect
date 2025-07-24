@@ -164,14 +164,16 @@ class SanctionsService {
       const responseTime = Date.now() - startTime;
       let errorMessage = "Connection failed";
       
-      if (error.name === 'AbortError') {
-        errorMessage = "Request timeout - API not responding";
-      } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
-        errorMessage = "Network error - Check internet connection";
+if (error.name === 'AbortError') {
+        errorMessage = "Connection timeout - API server not responding";
+      } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch') || error.message.includes('Load failed')) {
+        errorMessage = "Network error: Unable to reach API server. Please check your internet connection and try again.";
       } else if (error.message.includes('CORS')) {
-        errorMessage = "CORS error - API access blocked";
+        errorMessage = "Access blocked - CORS policy restriction";
+      } else if (error.message.includes('DNS') || error.message.includes('resolve')) {
+        errorMessage = "Cannot resolve server address - Check your network connection";
       } else {
-        errorMessage = error.message || "Unknown connection error";
+        errorMessage = error.message || "Connection failed - Please verify your internet connection";
       }
 
       return {
@@ -219,12 +221,12 @@ async searchEntities(query) {
       clearTimeout(timeoutId);
       console.error("Search error:", error);
       
-      if (error.name === 'AbortError') {
-        throw new Error("Search timeout - API not responding");
-      } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
-        throw new Error("Network error - Check internet connection");
+if (error.name === 'AbortError') {
+        throw new Error("Search timeout - API server not responding");
+      } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch') || error.message.includes('Load failed')) {
+        throw new Error("Network error: Unable to complete search. Please check your internet connection and try again.");
       } else {
-        throw new Error(error.message || "Failed to search entities");
+        throw new Error(error.message || "Search failed - Please verify your connection and try again");
       }
     }
   }
@@ -263,12 +265,12 @@ async getEntityDetails(entityId) {
       clearTimeout(timeoutId);
       console.error("Entity details error:", error);
       
-      if (error.name === 'AbortError') {
-        throw new Error("Request timeout - API not responding");
-      } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
-        throw new Error("Network error - Check internet connection");
+if (error.name === 'AbortError') {
+        throw new Error("Request timeout - API server not responding");
+      } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch') || error.message.includes('Load failed')) {
+        throw new Error("Network error: Unable to load entity details. Please check your internet connection and try again.");
       } else {
-        throw new Error(error.message || "Failed to fetch entity details");
+        throw new Error(error.message || "Failed to load details - Please verify your connection and try again");
       }
     }
   }
